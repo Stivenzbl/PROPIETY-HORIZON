@@ -1,0 +1,82 @@
+{
+  "name": "[monorepo] propriety-horizon",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Monorepo Propietario: Propiedad Horizontal / Condominios",
+  "author": "Propiety Horizon Team",
+  "license": "MIT",
+  "repository": "vazio.github.io",
+  "scripts": {
+    "// FRONTEND": "Next.js App Router SPA (SPA) con App Router",
+    "// BACKEND (API)": "",
+    "// MONOREPO BUILD PIPELINE": "",
+    // Scripts del Frontend - Client
+    "dev": "pnpm --filter propriety-horizon client:dev",
+    "build": "turbo build",
+    "start": "pnpm --filter propriety-horizon client:start",
+    // Scripts del Backend - Server
+    "server:dev": "pnpm --filter propriety-horizon-server server:dev",
+    "server:build": "pnpm --filter propriety-horizon-server build",
+    "server:start": "pnpm --filter propriety-horizon-server start",
+    // Scripts compartidos para dev & build
+    "pre-commit": "lint-staged",
+    "prisma:generate": "pnpm --filter propriety-horizon-server prisma:generate",
+    "typecheck": "turbo typecheck"
+  },
+  "sideEffects": false,
+  "packageManager": "pnpm@9.1.2",
+  "pnpm": {
+    "packageExtensions": {
+      "@radix-ui/react-slot": {
+        "peerDependencies": {
+          "react": ">= 16.8"
+        }
+      },
+      "react-hook-form": {
+        "peerDependencies": {
+          "react": ">= 16.8"
+        }
+      }
+    },
+    "overrides": {
+      "@types/react": "npm:types-react@npm:latest",
+      "@types/react-dom": "npm:types-react-dom@npm:latest",
+      "@types/react@npm:*": "npm:types-react@npm:19.0.1",
+      "react": "19.0.0-rc-04c0880f-20241031",
+      "react-dom": "19.0.0-rc-04c0880f-20241031"
+    }
+  },
+  // Workspaces del monorepo
+  "workspaces": [
+    "client",
+    "server/@types"
+  ],
+  "devDependencies": {
+    "@commitlint/cli": "^19.5.0",
+    "@commitlint/config-conventional": "^19.5.0",
+    "@typescript-eslint/eslint-plugin": "^8.12.2",
+    "@typescript-eslint/parser": "^8.12.2",
+    "eslint-plugin-react": "^7.37.2",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.2.10",
+    "turbo": "^2.1.4",
+    "typescript": "^5.6.3"
+  },
+  "pnpm": {
+    "overrides": {
+      "@types/react": "npm:types-react@npm:latest",
+      "@types/react-dom": "npm:types-react-dom@npm:latest",
+      "@types/react@npm:*": "npm:types-react@npm:19.0.1",
+      "react": "19.0.0-rc-04c0880f-20241031",
+      "react-dom": "19.0.0-rc-04c0880f-20241031"
+    },
+    "patchedDependencies": {}
+  },
+  "dependencies": {
+    "lucide-react": "^0.316.0",
+    "tailwind-merge": "^2.2.1",
+    "clsx": "^2.0.0"
+  }
+}
