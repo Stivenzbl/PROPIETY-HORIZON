@@ -3,31 +3,23 @@
     "target": "es2017",
     "lib": ["dom", "ESNext"],
     "allowSyntheticDefaultImports": true,
-    "moduleResolution": "bundler",
-    "baseUrl": "./src",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
+    "moduleResolution": "node",
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "skipLibCheck": true,
-    "noEmit": false,
+    "noEmit": true,
     "emitDeclarationOnly": false,
     "forceConsistentCasingInFileNames": true,
-    "moduleDetection": "dynamic",
     "esModuleInterop": true,
     "allowImportingTsExtensions": true,
-    "composite": true,
-    "declaration": true,
-    "declarationMap": true,
-    "inlineSources": true,
-    "skipDefaultLibCheck": false,
+    "skipDefaultLibCheck": true,
     "paths": {
-      "@/*": ["./*"],
-      "@@/*": ["../client/src/*"],
-      "@ui/*": ["@/components/ui/**"]}
+      "*": ["./src/*"]
+    },
+    "moduleDetection": "legacy",
+    "sourceMap": true
   },
-  "include": ["./main.ts", "./src/**/*.ts", "**/.d.ts", "prisma/schema.prisma", "**/*.md"],
-  "types": ["node/@types/cors", "node/@types/uuid", "node/@types/bcryptjs"]
+  "include": ["./main.ts", "./src/**/*.ts", "prisma/schema.prisma", "**/*.md"]
 }

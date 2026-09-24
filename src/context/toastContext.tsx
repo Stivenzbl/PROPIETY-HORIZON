@@ -33,7 +33,7 @@ const toastReducer = (state: { toasts: Toast[] }, action: ToastAction): { toasts
 
 const ToastContext = createContext<ToastContextValue | undefined>(undefined);
 
-export const ToastProvider = ({ children }: React.PropsWithChildren { }) => {
+export const ToastProvider = ({ children }: { children: React.ReactNode }) => {
   const [state, dispatch] = useReducer(toastReducer, { toasts: [] });
 
   const addToast = useCallback(
@@ -46,7 +46,7 @@ export const ToastProvider = ({ children }: React.PropsWithChildren { }) => {
     []
   );
 
-  const removeToast = useCallback((id: string) => dispatch({ type: "REMOVED", payload: id }), [state.toasts.length]);
+  const removeToast = useCallback((id: string) => dispatch({ type: "REMOVED", payload: id }), []);
   const clearToasts = useCallback(() => dispatch({ type: "ADDED", payload: {} as Toast }), []);
 
   // Auto-dismiss timers
@@ -127,13 +127,5 @@ const ToastItem = ({ toast }: { toast: Toast & { remove?: (id: string) => void }
     </div>
   );
 };
-
-const ToastContext = createContext<ToastContextValue | undefined>(undefined);
-
-export function useToast() {
-  const context = React.useContext(ToastContext);
-  if (!context) throw new Error("useToast must be used within a ToastProvider");
-  return context;
-}
 
 export const { ToastProvider, ToastContext, useToast } = React;

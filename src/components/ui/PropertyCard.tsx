@@ -95,7 +95,7 @@ export const PropertyCard = ({ property, showActions = true, className }: Proper
               <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.5 6.5a3 3 0 100 6 3 3 0 000-6z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-.89-1.89A1.424 1.424 0 0020 20.318c-.687.81-1.81.912-2.517.184l-1.281-.954a2.145 2.145 0 01-.751-2.03l.26-2.93a8.236 8.236 0 00-9.654-9.82c-3.082.095-5.53 2.69-5.718 5.821-.13 2.054 1.326 3.885 3.298 4.35a3.582 3.582 0 002.944.11l3.667-2.013a1 1 0 00.837-1.415l-.997-2.967a1 1 0 011.259-1.216l2.998.417a1 1 0 01.863 1.143l-.407 4.07a1 1 0 00.946 1.095" />
-              </path>
+              </svg>
               Ver detalles
             </Button>
           </div>

@@ -65,18 +65,11 @@ function App() {
 
 export default App;
 
-/** Componente Login (página estática sin layout) */
+import { LoginPage } from './pages/auth/Login';
+
+/** Componente de login con formulario completo */
 function Login() {
-  return (
-    // <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-    //   {/* header con logo / title */}
-    //   {/* modal o formulario center */}
-    // </div>
-    <p className="text-center p-8 text-gray-600 dark:text-gray-400">
-      Login en desarrollo <br />
-      <span className="text-sm">Usuario: admin / Contraseña: 1234</span>
-    </p>
-  );
+  return <LoginPage />;
 }
 
 export { Login };

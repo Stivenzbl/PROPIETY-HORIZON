@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useReducer } from "react";
+import React, { createContext, useContext, useReducer, useEffect, useMemo, useCallback } from "react";
 import { PaginatedList, Property } from "../types";
 
 const PROPS_PER_PAGE = 12;
@@ -28,9 +28,46 @@ function propertyReducer(
         : { ...state, selectedCategory: undefined };
     case "SET_SORT_MODE":
       return { ...state, sortMode: action.payload };
+    case "SET_CURRENT_PAGE":
+      return { ...state, currentPage: action.payload };
+    case "SET_IS_LOADING":
+      return { ...state, isLoading: action.payload };
+    case "SET_ERROR":
+      return { ...state, error: action.payload };
     default:
       return state;
   }
+}
+
+interface PropertyState {
+  properties: Property[];
+  isLoading: boolean;
+  error: string | null;
+  searchTerm: string;
+  selectedCategory?: string;
+  sortMode: 'newest' | 'oldest' | 'price_asc' | 'price_desc';
+  totalPages: number;
+  currentPage: number;
+  isSidebarOpen: boolean;
+}
+
+interface PropertyAction {
+  type: string;
+  payload?: any;
+}
+
+interface PropertyFormData {
+  name: string;
+  address: string;
+  lot: number;
+  bedrooms: number;
+  bathrooms: number;
+  areaTotal: number;
+  buildingFloors: number;
+  type: PropertyType;
+  category: BuildingCategory;
+  status: PropertyStatus;
+  condominiumFee: number;
 }
 
 const PropertyContext = createContext<PropertyState | undefined>(undefined);
@@ -43,10 +80,81 @@ export const useProperty = (): PropertyState => {
   return context;
 };
 
+interface PropertyApiResponse {
+  items: Property[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
+async function fetchProperties(params: {
+  page?: number;
+  limit?: number;
+  searchTerm?: string;
+  category?: string;
+  sortMode?: string;
+}): Promise<PropertyApiResponse> {
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+  const queryParams = new URLSearchParams({
+    page: (params.page || 1).toString(),
+    limit: (params.limit || PROPS_PER_PAGE).toString(),
+    ...(params.searchTerm && { search: params.searchTerm }),
+    ...(params.category && { category: params.category }),
+    ...(params.sortMode && { sort: params.sortMode }),
+  });
+
+  const response = await fetch(`${baseUrl}/api/properties?${queryParams.toString()}`);
+  if (!response.ok) {
+    throw new Error('Error al cargar propiedades');
+  }
+  return response.json();
+}
+
+async function createProperty(property: PropertyFormData) {
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+  const response = await fetch(`${baseUrl}/api/properties`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(property),
+  });
+  if (!response.ok) {
+    throw new Error('Error al crear la propiedad');
+  }
+  return response.json();
+}
+
+async function updateProperty(id: string, updates: Partial<PropertyFormData>) {
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+  const response = await fetch(`${baseUrl}/api/properties/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(updates),
+  });
+  if (!response.ok) {
+    throw new Error('Error al actualizar la propiedad');
+  }
+  return response.json();
+}
+
+async function deleteProperty(id: string) {
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+  const response = await fetch(`${baseUrl}/api/properties/${id}`, {
+    method: 'DELETE',
+  });
+  if (!response.ok) {
+    throw new Error('Error al eliminar la propiedad');
+  }
+  return true;
+}
+
 const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const initialState: PropertyState = {
     properties: [],
-    isLoading: false,
+    isLoading: true,
     error: null,
     searchTerm: "",
     selectedCategory: undefined,
@@ -57,6 +165,32 @@ const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ children })
   };
 
   const [state, dispatch] = useReducer(propertyReducer, initialState);
+
+  useEffect(() => {
+    let cancelled = false;
+    
+    fetchProperties({})
+      .then((data) => {
+        if (!cancelled) {
+          dispatch({
+            type: "SET_PROPERTIES",
+            payload: {
+              items: data.items,
+              totalPages: data.totalPages,
+            },
+          });
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          dispatch({ type: "SET_ERROR", payload: err.message });
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const getFilteredListing = useMemo(() => {
     let result: Property[] = [...state.properties];
@@ -107,36 +241,104 @@ const PropertyProvider: React.FC<{ children: React.ReactNode }> = ({ children })
   }, [getFilteredListing, state.currentPage]);
 
   const addProperty = useCallback(
-    (property: Property) => {
-      dispatch({
-        type: "SET_PROPERTIES",
-        payload: { ...getFilteredListing, items: [property, ...getFilteredListing] as unknown as PaginatedList<Property>, totalItems: state.properties.length + 1 },
-      });
+    async (property: PropertyFormData) => {
+      try {
+        await createProperty(property);
+        dispatch({ type: "SET_IS_LOADING", payload: true });
+        fetchProperties({}).then((data) => {
+          dispatch({
+            type: "SET_PROPERTIES",
+            payload: {
+              items: data.items,
+              totalPages: data.totalPages,
+            },
+          });
+        });
+      } catch (error) {
+        dispatch({ type: "SET_ERROR", payload: error instanceof Error ? error.message : 'Error desconocido' });
+      }
     },
     []
   );
 
   const updateProperty = useCallback(
-    (id: string, updates: Partial<Property>) => {
-      const updatedItem = { ...getFilteredListing[0], ...updates, updatedAt: new Date() };
-      dispatch({
-        type: "SET_PROPERTIES",
-        payload: { ...getFilteredListing, items: [updatedItem, ...getFilteredListing.slice(1)], totalItems: state.properties.length },
-      });
+    async (id: string, updates: Partial<PropertyFormData>) => {
+      try {
+        await updateProperty(id, updates);
+        dispatch({ type: "SET_IS_LOADING", payload: true });
+        fetchProperties({}).then((data) => {
+          dispatch({
+            type: "SET_PROPERTIES",
+            payload: {
+              items: data.items,
+              totalPages: data.totalPages,
+            },
+          });
+        });
+      } catch (error) {
+        dispatch({ type: "SET_ERROR", payload: error instanceof Error ? error.message : 'Error desconocido' });
+      }
     },
     []
   );
 
   const deleteProperty = useCallback(
-    (id: string) => {
-      const filtered = getFilteredListing.filter((p) => p.id !== id);
-      dispatch({
-        type: "SET_PROPERTIES",
-        payload: { ...getFilteredListing, items: filtered as unknown as Property[], totalItems: state.properties.length - 1 },
-      });
+    async (id: string) => {
+      try {
+        await deleteProperty(id);
+        dispatch({ type: "SET_IS_LOADING", payload: true });
+        fetchProperties({}).then((data) => {
+          dispatch({
+            type: "SET_PROPERTIES",
+            payload: {
+              items: data.items,
+              totalPages: data.totalPages,
+            },
+          });
+        });
+      } catch (error) {
+        dispatch({ type: "SET_ERROR", payload: error instanceof Error ? error.message : 'Error desconocido' });
+      }
     },
     []
   );
 
-  return { ...state, addProperty, updateProperty, deleteProperty };
+  const setSearchTerm = useCallback(
+    (term: string) => {
+      dispatch({ type: "SET_SEARCH_TERM", payload: term });
+    },
+    []
+  );
+
+  const setSelectedCategory = useCallback(
+    (category: string | undefined) => {
+      dispatch({ type: "SET_SELECTED_CATEGORY", payload: category });
+    },
+    []
+  );
+
+  const setSortMode = useCallback(
+    (mode: 'newest' | 'oldest' | 'price_asc' | 'price_desc') => {
+      dispatch({ type: "SET_SORT_MODE", payload: mode });
+    },
+    []
+  );
+
+  const setCurrentPage = useCallback(
+    (page: number) => {
+      dispatch({ type: "SET_CURRENT_PAGE", payload: page });
+    },
+    []
+  );
+
+  const toggleSidebar = useCallback(
+    (isOpen: boolean) => {
+      dispatch({ type: "TOGGLE_SIDEBAR", payload: isOpen });
+    },
+    []
+  );
+
+  return { ...state, addProperty, updateProperty, deleteProperty, setSearchTerm, setSelectedCategory, setSortMode, setCurrentPage, toggleSidebar };
 };
+
+export { PropertyProvider, useProperty };

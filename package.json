@@ -7,21 +7,17 @@
   "license": "MIT",
   "repository": "vazio.github.io",
   "scripts": {
-    "// FRONTEND": "Next.js App Router SPA (SPA) con App Router",
-    "// BACKEND (API)": "",
-    "// MONOREPO BUILD PIPELINE": "",
-    // Scripts del Frontend - Client
-    "dev": "pnpm --filter propriety-horizon client:dev",
+    "FRONTEND": "Next.js App Router SPA (SPA) con App Router",
+    "BACKEND (API)": "",
+    "MONOREPO BUILD PIPELINE": "",
+    "dev": "turbo run dev // runs all packages (client, server) in parallel",
     "build": "turbo build",
-    "start": "pnpm --filter propriety-horizon client:start",
-    // Scripts del Backend - Server
-    "server:dev": "pnpm --filter propriety-horizon-server server:dev",
-    "server:build": "pnpm --filter propriety-horizon-server build",
+    "start:frontend": "turbo run client:start",
+    "server:dev": "pnpm --filter propriety-horizon-server dev",
     "server:start": "pnpm --filter propriety-horizon-server start",
-    // Scripts compartidos para dev & build
     "pre-commit": "lint-staged",
     "prisma:generate": "pnpm --filter propriety-horizon-server prisma:generate",
-    "typecheck": "turbo typecheck"
+    "typecheck": "pnpm --filter propriety-horizon-frontend run typecheck && pnpm --filter propriety-horizon-server tsc"
   },
   "sideEffects": false,
   "packageManager": "pnpm@9.1.2",
@@ -38,15 +34,14 @@
         }
       }
     },
-    "overrides": {
+"overrides": {
       "@types/react": "npm:types-react@npm:latest",
       "@types/react-dom": "npm:types-react-dom@npm:latest",
       "@types/react@npm:*": "npm:types-react@npm:19.0.1",
-      "react": "19.0.0-rc-04c0880f-20241031",
-      "react-dom": "19.0.0-rc-04c0880f-20241031"
+      "react": "^19.0.0",
+      "react-dom": "^19.0.0"
     }
   },
-  // Workspaces del monorepo
   "workspaces": [
     "client",
     "server/@types"
@@ -64,19 +59,13 @@
     "turbo": "^2.1.4",
     "typescript": "^5.6.3"
   },
-  "pnpm": {
-    "overrides": {
-      "@types/react": "npm:types-react@npm:latest",
-      "@types/react-dom": "npm:types-react-dom@npm:latest",
-      "@types/react@npm:*": "npm:types-react@npm:19.0.1",
-      "react": "19.0.0-rc-04c0880f-20241031",
-      "react-dom": "19.0.0-rc-04c0880f-20241031"
-    },
-    "patchedDependencies": {}
-  },
   "dependencies": {
-    "lucide-react": "^0.316.0",
-    "tailwind-merge": "^2.2.1",
-    "clsx": "^2.0.0"
+    "@hookform/resolvers": "^3.9.1",
+    "lucide-react": "^0.471.0",
+    "tailwindcss": "^3.4.17",
+    "eslint": "^9.21.0",
+    "typescript": "^5.7.2",
+    "@eslint/js": "^9.21.0",
+    "globals": "^16.0.0"
   }
 }
