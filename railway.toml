@@ -1,0 +1,13 @@
+build:
+  command: pnpm build
+  deployCommand: pnpm start
+
+environments:
+  - key: DATABASE_URL
+    value: postgresql://postgres:postgres@db.fghijklmno.supabase.co:5432/postgres
+  - key: JWT_SECRET
+    value: propriety-horizon-secret-key-change-in-production
+  - key: NODE_ENV
+    value: production
+  - key: CORS_ORIGIN
+    value: https://your-vercel-app.vercel.app

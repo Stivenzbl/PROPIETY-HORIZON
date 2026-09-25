@@ -9,263 +9,44 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Basic models without complex relations for initial setup
 model User {
   id        String    @id @default(uuid())
   name      String
   email     String   @unique
   password  String
-  phone     String?
-  role      UserRole @default(RESIDENT)
-  address   String?
-  buildingId String?
-  unitId    String?
-  avatar    String?
-  isActive  Boolean  @default(true)
+  role      String   @default("RESIDENT")
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  properties Department[]
-  requests  MaintenanceRequest[]
-}
-
-enum UserRole {
-  ADMIN
-  PROPRIETARY
-  RESIDENT
-  SUPERVISOR
 }
 
 model Building {
-  id          String   @id @default(uuid())
-  name        String
-  address     String
-  city        String?
-  country     String   @default("México")
-  state       String?
-  postalCode  String?
-  description String?
-  lat         Decimal(10, 8)?
-  lng         Decimal(10, 8)?
-  totalFloors Int      @default(1)
-  isManaged   Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  units    Unit[]          @relation("BuildingUnits")
-  departments Department[] @relation("BuildingDepartments")
-}
-
-model Condominium {
   id        String    @id @default(uuid())
-  name      String    @db.VarChar(255)
+  name      String
   address   String
-  city      String?
-  postalCode String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  buildings Building[] @relation("CondominiumBuildings")
+  city      String
 }
 
 model Unit {
-  id         String    @id @default(uuid())
+  id        String    @id @default(uuid())
   buildingId String
-  number     String?   @db.VarChar(50)
-  floor      Int
-  area       Decimal(10, 2)
-  type       UnitType  @default(RESIDENTIAL)
-  status     UnitStatus @default(AVAILABLE)
-
-  building   Building   @relation("BuildingUnits", fields: [buildingId], references: [id])
-  departments Department[] @relation("UnitDepartments")
-}
-
-enum UnitType {
-  RESIDENTIAL
-  COMMERCIAL
-  GARAGE
-  COMMUNE
-}
-
-enum UnitStatus {
-  AVAILABLE
-  OCCUPIED
-  VACANT
-  RENTED
-}
-
-model Department {
-  id      String   @id @default(uuid())
-  unitId  String   @unique
-  name    String   @db.VarChar(100)
-  floor   Decimal(5, 2)
-  area    Decimal(10, 2)
-  ownerId String?
-  status  PropertyStatus @default('RESIDENTIAL')
-
-  unit     Unit       @relation("UnitDepartments", fields: [unitId], references: [id])
-  owner    User?      @relation("PropertyOwner")
-}
-
-enum PropertyStatus {
-  RESIDENTIAL
-  COMMERCIAL
-  TEMPORARY
-  VACANT
-  MAINTENANCE
-}
-
-model MaintenanceRequest {
-  id           String   @id @default(uuid())
-  title        String
-  description  String?
-  category     MaintenanceCategory?
-  priority     MaintenancePriority @default(NORMAL)
-  status       RequestStatus    @default(PENDING)
-  reportedBy   String
-  buildingId   String
-  unitId       String?
-  deadline     DateTime?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  requester User     @relation("MaintenanceRequester")
-  technician? User   @relation("MaintenanceTechnician")
-}
-
-enum MaintenanceCategory {
-  PLUMBING
-  ELECTRICAL
-  HVAC_AIRCONDITIONING
-  CARPENTRY
-  PAINTING
-  CONSTRUCTION
-  GENERAL_REPAIRS
-  SECURITY
-  ELEVATOR
-  PARKING
-  GREENSPACE
-  OTHER
-}
-
-enum MaintenancePriority {
-  LOW
-  NORMAL
-  URGENT
-  EMERGENCY
-}
-
-enum RequestStatus {
-  PENDING
-  IN_PROGRESS
-  COMPLETED
-  REJECTED
-  RESOLVED
+  number    String
+  area      Float
 }
 
 model Payment {
-  id           String     @id @default(uuid())
-  amount       Decimal(12, 2)
-  paymentDate  DateTime
-  dueDate      DateTime
-  status       PaymentStatus @default(PENDING)
-  method       PaymentMethod?
-  reference    String?
-  notes        String?
-
-  departmentId String  @unique
-  buildingId  String
-}
-
-enum PaymentStatus {
-  PENDING
-  PARTIAL
-  PAID
-  OVERDUE
-  CANCELLED
-}
-
-enum PaymentMethod {
-  CREDIT_CARD
-  DEBIT_CARD
-  TRANSFER_BANCOMER
-  TRANSFER_SANTANDER
-  TRANSFEX_AVALOOPS
-  CHECK
-  CASH
-  WECHAT_PAY
-  ALIPAY
-  QR_CODE
-  QR_PAYMENT
+  id        String    @id @default(uuid())
+  amount    Float
+  status    String    @default("PENDING")
 }
 
 model Service {
-  id             String      @id @default(uuid())
-  name           String      @unique @db.VarChar(200)
-  category       String      @default("UTILITIES")
-  description    String?
-  price          Decimal(10, 2)?
-  billingFrequency Int       @default(1)
-  isActive       Boolean     @default(true)
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
-
-  buildingId String
+  id        String    @id @default(uuid())
+  name      String
+  price     Float?
 }
 
-model ServiceLog {
-  id        String        @id @default(uuid())
-  serviceId String
-  amount    Decimal(10, 2)?
-  isPaid    Boolean      @default(false)
-  notes     String?
-  timestamp DateTime     @default(now())
-
-  service Service @relation(fields: [serviceId], references: [id])
-}
-
-model Notification {
-  id         String       @id @default(uuid())
-  recipientId String
-  title      String
-  content    String
-  type       NotificationType
-  isRead     Boolean      @default(false)
-  linkedId   String?
-  createdAt  DateTime     @default(now())
-
-  user User @relation("NotificationRecipient", fields: [recipientId], references: [id])
-}
-
-enum NotificationType {
-  MAINTENANCE_REQUESTED
-  MAINTENANCE_COMPLETED
-  PAYMENT_REMINDER
-  PAYMENT_DUE
-  COMMUNITY_ANOUNCEMENT
-  GENERAL_MESSAGE
-  UNIT_STATUS_CHANGED
-}
-
-model AuditLog {
-  id        String   @id @default(uuid())
-  actorId   String?
-  action    String
-  entity    String?
-  entityId  String?
-  changes   Json
-  createdAt DateTime @default(now())
-
-  user User? @relation("AuditActor", fields: [actorId], references: [id])
-}
-
-model SystemSetting {
-  id        String   @id @default(uuid())
-  buildingId String?
-  key       String   @unique
-  value     Json
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  building Building?
+model MaintenanceRequest {
+  id        String    @id @default(uuid())
+  title     String
+  status    String    @default("PENDING")
 }
